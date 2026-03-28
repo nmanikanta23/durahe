@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - Durahe{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">My Account</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('orders.order_history') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-box me-2"></i> My Orders
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i> Profile Settings
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-map-marker-alt me-2"></i> Address Book
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="fas fa-heart me-2"></i> Wishlist
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order History</h5>
+                </div>
+                <div class="card-body">
+                    {% if orders %}
+                        {% for order in orders %}
+                        <div class="order-card mb-4 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Order #{{ order.order_number }}</h6>
+                                    <small class="text-muted">Placed on {{ order.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{{ 'warning' if order.status == 'pending' else 'info' if order.status == 'processing' else 'success' if order.status == 'shipped' else 'secondary' }} mb-2">
+                                        {{ order.status|upper }}
+                                    </span>
+                                    <div class="mt-1">
+                                        <strong class="text-dark">₹{{ "%.2f"|format(order.total_amount) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="order-items">
+                                        {% for item in order.items[:2] %}
+                                        <div class="d-flex align-items-center mb-2">
+                                            <img src="{{ url_for('static', filename=item.product.image_url or 'uploads/placeholder.jpg') }}" 
+                                                 alt="{{ item.product_name }}" 
+                                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                                 class="me-2 rounded">
+                                            <div>
+                                                <small>{{ item.product_name }}</small>
+                                                <br>
+                                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% if order.items|length > 2 %}
+                                        <small class="text-muted">+{{ order.items|length - 2 }} more items</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <a href="{{ url_for('orders.order_confirmation', order_id=order.id) }}" class="btn btn-sm btn-outline-dark w-100 mb-2">
+                                        View Details
+                                    </a>
+                                    {% if order.status == 'delivered' %}
+                                    <button class="btn btn-sm btn-outline-success w-100" onclick="writeReview({{ order.id }})">
+                                        Write a Review
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
+                            <h5>No orders yet</h5>
+                            <p class="text-muted">Your order history will appear here once you make a purchase.</p>
+                            <a href="{{ url_for('main.products') }}" class="btn btn-dark mt-3">
+                                Start Shopping
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function writeReview(orderId) {
+    showNotification('Review feature coming soon!', 'info');
+}
+</script>
+
+<style>
+.order-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.list-group-item.active {
+    background-color: #000;
+    border-color: #000;
+}
+
+.list-group-item-action:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

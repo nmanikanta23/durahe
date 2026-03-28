@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Manage Users</h2>
+            <p class="text-muted">View and manage all registered users</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">All Users</h5>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="searchUsers" class="form-control" placeholder="Search by name, email, or username...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="usersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Orders</th>
+                            <th>Joined</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-placeholder bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        {{ user.username[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.full_name or user.username }}</strong>
+                                        <br>
+                                        <small class="text-muted">@{{ user.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <i class="fas fa-envelope text-muted me-1"></i> {{ user.email }}<br>
+                                {% if user.phone %}
+                                <i class="fas fa-phone text-muted me-1"></i> {{ user.phone }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.city and user.state %}
+                                {{ user.city }}, {{ user.state }}
+                                {% else %}
+                                <span class="text-muted">Not provided</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ user.orders|length }}</span>
+                            </td>
+                            <td>{{ user.created_at.strftime('%d-%m-%Y') }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                <span class="badge bg-dark">Admin</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Customer</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.view_user', user_id=user.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if not user.is_admin and user.id != current_user.id %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Users</h6>
+                    <h3 class="mb-0">{{ users|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Customers</h6>
+                    <h3 class="mb-0">{{ users|selectattr('is_admin', 'equalto', False)|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Admins</h6>
+                    <h3 class="mb-0">{{ users|selectattr('is_admin')|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">New Users (30 days)</h6>
+                    <h3 class="mb-0">
+                        {% set thirty_days_ago = datetime.utcnow() - timedelta(days=30) %}
+                        {{ users|selectattr('created_at', 'ge', thirty_days_ago)|list|length }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        fetch(`/admin/users/delete/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error deleting user');
+            }
+        });
+    }
+}
+
+// Search functionality
+document.getElementById('searchUsers').addEventListener('keyup', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchValue)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Avatar colors
+document.querySelectorAll('.avatar-placeholder').forEach(avatar => {
+    const colors = ['#c8a97e', '#6c757d', '#28a745', '#17a2b8', '#ffc107'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    avatar.style.backgroundColor = randomColor;
+});
+</script>
+
+<style>
+.avatar-placeholder {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-group .btn {
+    margin: 0 2px;
+}
+</style>
+{% endblock %}

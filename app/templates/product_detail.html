@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Durahe{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.products') }}" class="text-decoration-none">Shop</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.products', category=product.category.id) }}" class="text-decoration-none">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6 mb-4">
+            <div class="product-gallery">
+                <div class="main-image mb-3">
+                    <img src="{{ url_for('static', filename=product.image_url or 'uploads/placeholder.jpg') }}" 
+                         class="img-fluid rounded shadow-sm" 
+                         alt="{{ product.name }}"
+                         id="mainProductImage"
+                         style="width: 100%; height: auto; cursor: zoom-in;">
+                </div>
+                {% if product.images %}
+                <div class="thumbnail-images d-flex gap-2">
+                    {% set images = product.images.split(',') %}
+                    {% for img in images %}
+                    <div class="thumbnail" style="width: 80px; height: 80px; cursor: pointer;">
+                        <img src="{{ url_for('static', filename=img) }}" 
+                             class="img-fluid rounded border" 
+                             alt="Thumbnail {{ loop.index }}"
+                             onclick="changeImage(this.src)"
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="display-5 fw-bold mb-3">{{ product.name }}</h1>
+            
+            <!-- Rating -->
+            <div class="mb-3">
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star text-warning"></i>
+                <i class="fas fa-star-half-alt text-warning"></i>
+                <span class="text-muted ms-2">(24 reviews)</span>
+            </div>
+
+            <!-- Price -->
+            <div class="mb-4">
+                {% if product.discount_price %}
+                <h2 class="text-danger d-inline-block me-2">₹{{ "%.2f"|format(product.discount_price) }}</h2>
+                <del class="text-muted h4">₹{{ "%.2f"|format(product.price) }}</del>
+                <span class="badge bg-success ms-2">Save ₹{{ "%.2f"|format(product.price - product.discount_price) }}</span>
+                {% else %}
+                <h2 class="text-dark">₹{{ "%.2f"|format(product.price) }}</h2>
+                {% endif %}
+            </div>
+
+            <!-- Availability -->
+            <div class="mb-3">
+                {% if product.stock > 0 %}
+                <span class="text-success">
+                    <i class="fas fa-check-circle"></i> In Stock ({{ product.stock }} items available)
+                </span>
+                {% else %}
+                <span class="text-danger">
+                    <i class="fas fa-times-circle"></i> Out of Stock
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p class="text-muted">{{ product.description or 'No description available.' }}</p>
+            </div>
+
+            <!-- Key Features -->
+            <div class="mb-4">
+                <h5>Key Features</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Premium Quality Material</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Free Shipping on orders above ₹999</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> 30-Day Easy Returns</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Secure Payment Gateway</li>
+                </ul>
+            </div>
+
+            <!-- Size Selector -->
+            <div class="mb-4">
+                <h5>Select Size</h5>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="size" id="size-s" autocomplete="off">
+                    <label class="btn btn-outline-dark" for="size-s">S</label>
+
+                    <input type="radio" class="btn-check" name="size" id="size-m" autocomplete="off">
+                    <label class="btn btn-outline-dark" for="size-m">M</label>
+
+                    <input type="radio" class="btn-check" name="size" id="size-l" autocomplete="off">
+                    <label class="btn btn-outline-dark" for="size-l">L</label>
+
+                    <input type="radio" class="btn-check" name="size" id="size-xl" autocomplete="off">
+                    <label class="btn btn-outline-dark" for="size-xl">XL</label>
+
+                    <input type="radio" class="btn-check" name="size" id="size-xxl" autocomplete="off">
+                    <label class="btn btn-outline-dark" for="size-xxl">XXL</label>
+                </div>
+            </div>
+
+            <!-- Quantity and Add to Cart -->
+            <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" 
+                               name="quantity" 
+                               id="quantity" 
+                               value="1" 
+                               min="1" 
+                               max="{{ product.stock }}"
+                               class="form-control"
+                               style="width: 100px;">
+                    </div>
+                    <div class="col-auto align-self-end">
+                        <button type="submit" class="btn btn-dark btn-lg px-4" {% if product.stock == 0 %}disabled{% endif %}>
+                            <i class="fas fa-shopping-bag me-2"></i> Add to Cart
+                        </button>
+                    </div>
+                    <div class="col-auto align-self-end">
+                        <button type="button" class="btn btn-outline-danger btn-lg px-4" onclick="addToWishlist({{ product.id }})">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Share Links -->
+            <div class="mt-4">
+                <h6>Share this product:</h6>
+                <div class="social-share">
+                    <a href="#" class="btn btn-outline-primary btn-sm me-2" onclick="shareOnFacebook()">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-info btn-sm me-2" onclick="shareOnTwitter()">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-danger btn-sm me-2" onclick="shareOnInstagram()">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-success btn-sm" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
+                        Description
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button" role="tab">
+                        Specifications
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
+                        Reviews (24)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab">
+                        Shipping & Returns
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content p-4 border border-top-0 rounded-bottom" id="productTabContent">
+                <div class="tab-pane fade show active" id="description" role="tabpanel">
+                    <h5>Product Description</h5>
+                    <p>{{ product.description or 'Experience premium quality and exceptional comfort with our exclusive collection. Designed for the modern individual who appreciates style and sophistication.' }}</p>
+                    <h6 class="mt-3">Care Instructions:</h6>
+                    <ul>
+                        <li>Machine wash cold with like colors</li>
+                        <li>Do not bleach</li>
+                        <li>Tumble dry low</li>
+                        <li>Cool iron if needed</li>
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="specifications" role="tabpanel">
+                    <h5>Technical Specifications</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 200px;">Material</th>
+                            <td>Premium Cotton Blend</td>
+                        </tr>
+                        <tr>
+                            <th>Fit</th>
+                            <td>Regular Fit</td>
+                        </tr>
+                        <tr>
+                            <th>Neck Style</th>
+                            <td>Crew Neck</td>
+                        </tr>
+                        <tr>
+                            <th>Sleeve Length</th>
+                            <td>Full Sleeve</td>
+                        </tr>
+                        <tr>
+                            <th>Country of Origin</th>
+                            <td>India</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h1 class="display-1 fw-bold">4.5</h1>
+                                <div class="mb-2">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                </div>
+                                <p>Based on 24 reviews</p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="review-item mb-4">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Rahul Sharma</strong>
+                                    <small class="text-muted">2 days ago</small>
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <p>Excellent quality! The fabric is super comfortable and fits perfectly.</p>
+                            </div>
+                            <div class="review-item mb-4">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Priya Patel</strong>
+                                    <small class="text-muted">5 days ago</small>
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="far fa-star text-warning"></i>
+                                </div>
+                                <p>Great product, fast delivery. Highly recommended!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="shipping" role="tabpanel">
+                    <h5>Shipping Information</h5>
+                    <ul>
+                        <li>Free shipping on orders above ₹999</li>
+                        <li>Standard delivery: 3-5 business days</li>
+                        <li>Express delivery: 1-2 business days (additional charges apply)</li>
+                        <li>International shipping available</li>
+                    </ul>
+                    <h5 class="mt-3">Return Policy</h5>
+                    <ul>
+                        <li>30-day easy returns</li>
+                        <li>Free pickup for returns</li>
+                        <li>Full refund or exchange available</li>
+                        <li>Items must be unused and in original packaging</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="mb-4">You May Also Like</h3>
+            <div class="row">
+                {% for related in related_products %}
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="product-card card h-100 shadow-sm">
+                        <div class="product-image position-relative" style="height: 250px; overflow: hidden;">
+                            <img src="{{ url_for('static', filename=related.image_url or 'uploads/placeholder.jpg') }}" 
+                                 class="card-img-top" alt="{{ related.name }}" 
+                                 style="height: 100%; object-fit: cover;">
+                            <div class="product-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 transition">
+                                <a href="{{ url_for('main.product_detail', product_id=related.id) }}" class="btn btn-light me-2">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <button class="btn btn-light" onclick="addToCart({{ related.id }})">
+                                    <i class="fas fa-shopping-bag"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body text-center">
+                            <h6 class="card-title">{{ related.name }}</h6>
+                            <div class="price">
+                                {% if related.discount_price %}
+                                <del class="text-muted small">₹{{ "%.2f"|format(related.price) }}</del>
+                                <span class="text-danger fw-bold">₹{{ "%.2f"|format(related.discount_price) }}</span>
+                                {% else %}
+                                <span class="fw-bold">₹{{ "%.2f"|format(related.price) }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function changeImage(src) {
+    document.getElementById('mainProductImage').src = src;
+}
+
+function addToWishlist(productId) {
+    showNotification('Added to wishlist!', 'success');
+}
+
+function shareOnFacebook() {
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank');
+}
+
+function shareOnTwitter() {
+    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent('Check out this product!') + '&url=' + encodeURIComponent(window.location.href), '_blank');
+}
+
+function shareOnInstagram() {
+    showNotification('Share this product on Instagram', 'info');
+}
+
+function shareOnWhatsApp() {
+    window.open('https://wa.me/?text=' + encodeURIComponent('Check out this product: ' + window.location.href), '_blank');
+}
+
+// Image zoom effect
+const mainImage = document.getElementById('mainProductImage');
+if (mainImage) {
+    mainImage.addEventListener('click', function() {
+        this.style.transform = 'scale(1.5)';
+        this.style.transition = 'transform 0.3s ease';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 300);
+    });
+}
+
+// Quantity input validation
+const quantityInput = document.getElementById('quantity');
+if (quantityInput) {
+    quantityInput.addEventListener('change', function() {
+        let value = parseInt(this.value);
+        const max = parseInt(this.getAttribute('max'));
+        if (value > max) {
+            this.value = max;
+            showNotification(`Only ${max} items available in stock`, 'warning');
+        }
+        if (value < 1) {
+            this.value = 1;
+        }
+    });
+}
+</script>
+
+<style>
+.product-gallery {
+    position: sticky;
+    top: 100px;
+}
+
+.thumbnail {
+    transition: transform 0.3s ease;
+}
+
+.thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.thumbnail img {
+    transition: border-color 0.3s ease;
+}
+
+.thumbnail img:hover {
+    border-color: #c8a97e !important;
+}
+
+.review-item {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 15px;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.btn-check:checked + .btn-outline-dark {
+    background-color: #000;
+    color: white;
+}
+
+.nav-tabs .nav-link {
+    color: #666;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    color: #000;
+    font-weight: 600;
+    border-bottom: 2px solid #c8a97e;
+}
+</style>
+{% endblock %}

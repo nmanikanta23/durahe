@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - Durahe{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-white text-center py-4 border-0">
+                    <h2 class="mb-0">Create Account</h2>
+                    <p class="text-muted mt-2">Join the Durahe family</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.full_name.label(class="form-label fw-bold") }}
+                            {{ form.full_name(class="form-control form-control-lg", placeholder="Enter your full name") }}
+                            {% for error in form.full_name.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label fw-bold") }}
+                            {{ form.username(class="form-control form-control-lg", placeholder="Choose a username") }}
+                            {% for error in form.username.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">This will be your display name.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label fw-bold") }}
+                            {{ form.email(class="form-control form-control-lg", placeholder="Enter your email address") }}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label fw-bold") }}
+                            {{ form.phone(class="form-control form-control-lg", placeholder="Enter your phone number") }}
+                            {% for error in form.phone.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label fw-bold") }}
+                            {{ form.password(class="form-control form-control-lg", placeholder="Create a password") }}
+                            {% for error in form.password.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Password must be at least 6 characters long.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.confirm_password.label(class="form-label fw-bold") }}
+                            {{ form.confirm_password(class="form-control form-control-lg", placeholder="Confirm your password") }}
+                            {% for error in form.confirm_password.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        {{ form.submit(class="btn btn-dark w-100 py-2 fw-bold") }}
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? 
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-bold">Sign In</a>
+                        </p>
+                    </div>
+
+                    <!-- Social Sign Up Options -->
+                    <div class="mt-4">
+                        <p class="text-center text-muted mb-3">Or sign up with</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary w-100" onclick="socialSignup('google')">
+                                <i class="fab fa-google"></i> Google
+                            </button>
+                            <button class="btn btn-outline-secondary w-100" onclick="socialSignup('facebook')">
+                                <i class="fab fa-facebook-f"></i> Facebook
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits Section -->
+            <div class="row mt-4 g-3">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-truck fa-2x text-secondary mb-2"></i>
+                        <p class="small mb-0">Free Shipping<br>on orders above ₹999</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-undo-alt fa-2x text-secondary mb-2"></i>
+                        <p class="small mb-0">30-Day<br>Easy Returns</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-lock fa-2x text-secondary mb-2"></i>
+                        <p class="small mb-0">Secure<br>Payments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function socialSignup(provider) {
+    showNotification(`${provider.charAt(0).toUpperCase() + provider.slice(1)} signup coming soon!`, 'info');
+}
+
+// Password strength indicator
+const passwordInput = document.querySelector('#password');
+if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        const strength = checkPasswordStrength(password);
+        updateStrengthIndicator(strength);
+    });
+}
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (password.length >= 10) strength++;
+    if (password.match(/[a-z]+/)) strength++;
+    if (password.match(/[A-Z]+/)) strength++;
+    if (password.match(/[0-9]+/)) strength++;
+    if (password.match(/[$@#&!]+/)) strength++;
+    return strength;
+}
+
+function updateStrengthIndicator(strength) {
+    let indicator = document.querySelector('.password-strength');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.className = 'password-strength mt-1';
+        passwordInput.parentNode.appendChild(indicator);
+    }
+    
+    if (strength <= 2) {
+        indicator.innerHTML = '<span class="text-danger">Weak password</span>';
+    } else if (strength <= 4) {
+        indicator.innerHTML = '<span class="text-warning">Medium password</span>';
+    } else {
+        indicator.innerHTML = '<span class="text-success">Strong password</span>';
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const terms = document.querySelector('#terms');
+    if (!terms.checked) {
+        e.preventDefault();
+        showNotification('Please accept the Terms of Service and Privacy Policy', 'error');
+    }
+});
+</script>
+
+<style>
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.form-control:focus {
+    border-color: #c8a97e;
+    box-shadow: 0 0 0 0.2rem rgba(200, 169, 126, 0.25);
+}
+
+.btn-dark:hover {
+    background-color: #c8a97e;
+    border-color: #c8a97e;
+}
+
+.password-strength {
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

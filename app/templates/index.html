@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section with Coming Soon -->
+<section class="hero-section position-relative d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 80vh;">
+    <div class="container text-center text-white">
+        <div class="hero-content">
+            <h1 class="display-1 fw-bold mb-4 coming-soon" data-aos="fade-up">
+                COMING SOON
+            </h1>
+            <p class="lead mb-5" data-aos="fade-up" data-aos-delay="100">
+                Experience the future of fashion with Durahe
+            </p>
+            <div class="row justify-content-center" data-aos="fade-up" data-aos-delay="200">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="email" class="form-control form-control-lg" placeholder="Enter your email for early access">
+                        <button class="btn btn-light btn-lg">Notify Me</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5" data-aos="fade-up">Shop by Category</h2>
+        <div class="row">
+            {% for category in categories %}
+            <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <a href="{{ url_for('main.products', category=category.id) }}" class="text-decoration-none">
+                    <div class="category-card text-center p-4 border rounded shadow-sm">
+                        <div class="category-icon mb-3">
+                            <i class="fas fa-tshirt fa-3x"></i>
+                        </div>
+                        <h5 class="mb-0">{{ category.name }}</h5>
+                        <small class="text-muted">{{ category.products|length }} products</small>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5" data-aos="fade-up">Featured Collection</h2>
+        <div class="row">
+            {% for product in featured_products %}
+            <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="product-card card h-100 shadow-sm">
+                    <div class="product-image position-relative" style="height: 300px; overflow: hidden;">
+                        <img src="{{ url_for('static', filename=product.image_url or 'uploads/placeholder.jpg') }}" 
+                             class="card-img-top" alt="{{ product.name }}" style="height: 100%; object-fit: cover;">
+                        <div class="product-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 transition">
+                            <button class="btn btn-light" onclick="addToCart({{ product.id }})">
+                                <i class="fas fa-shopping-bag"></i> Quick Add
+                            </button>
+                        </div>
+                        {% if product.discount_price %}
+                        <span class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 m-2 rounded">Sale</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <div class="price">
+                            {% if product.discount_price %}
+                            <del class="text-muted">₹{{ "%.2f"|format(product.price) }}</del>
+                            <span class="text-danger fw-bold">₹{{ "%.2f"|format(product.discount_price) }}</span>
+                            {% else %}
+                            <span class="fw-bold">₹{{ "%.2f"|format(product.price) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.products') }}" class="btn btn-dark btn-lg">View All Products</a>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+    <div class="container text-center">
+        <h2 data-aos="fade-up">Stay Updated</h2>
+        <p class="lead mb-4" data-aos="fade-up" data-aos-delay="100">
+            Be the first to know about our latest collections and exclusive offers
+        </p>
+        <form class="row g-3 justify-content-center" data-aos="fade-up" data-aos-delay="200">
+            <div class="col-md-6">
+                <input type="email" class="form-control form-control-lg" placeholder="Enter your email">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-dark btn-lg w-100">Subscribe</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}User Details - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_users') }}">Users</a></li>
+                    <li class="breadcrumb-item active">{{ user.username }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <div class="avatar-large bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 100px; height: 100px; font-size: 3rem;">
+                        {{ user.username[0]|upper }}
+                    </div>
+                    <h4>{{ user.full_name or user.username }}</h4>
+                    <p class="text-muted">@{{ user.username }}</p>
+                    <hr>
+                    <div class="text-start">
+                        <p><i class="fas fa-envelope me-2"></i> {{ user.email }}</p>
+                        {% if user.phone %}
+                        <p><i class="fas fa-phone me-2"></i> {{ user.phone }}</p>
+                        {% endif %}
+                        <p><i class="fas fa-calendar me-2"></i> Joined {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        <p>
+                            <i class="fas fa-user-tag me-2"></i> 
+                            {% if user.is_admin %}
+                            <span class="badge bg-dark">Administrator</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Customer</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order History</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in user.orders %}
+                                <tr>
+                                    <td>{{ order.order_number }}</td>
+                                    <td>{{ order.created_at.strftime('%d-%m-%Y') }}</td>
+                                    <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'warning' if order.status == 'pending' else 'success' }}">
+                                            {{ order.status|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.view_order', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                        <p>No orders yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Shipping Address</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.address %}
+                    <p>
+                        {{ user.address }}<br>
+                        {% if user.city %}{{ user.city }}, {% endif %}
+                        {% if user.state %}{{ user.state }}{% endif %}
+                        {% if user.pincode %}- {{ user.pincode }}{% endif %}
+                    </p>
+                    {% else %}
+                    <p class="text-muted">No shipping address provided</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Avatar color
+const avatar = document.querySelector('.avatar-large');
+if (avatar) {
+    const colors = ['#c8a97e', '#6c757d', '#28a745', '#17a2b8', '#ffc107'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    avatar.style.backgroundColor = randomColor;
+}
+</script>
+
+<style>
+.avatar-large {
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

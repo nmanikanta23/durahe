@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    {{ form.name.label(class="form-label fw-bold") }}
+                                    {{ form.name(class="form-control", placeholder="Enter product name") }}
+                                    {% for error in form.name.errors %}
+                                        <span class="text-danger small">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.category_id.label(class="form-label fw-bold") }}
+                                    {{ form.category_id(class="form-select") }}
+                                    {% for error in form.category_id.errors %}
+                                        <span class="text-danger small">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label fw-bold") }}
+                            {{ form.description(class="form-control", rows="5", placeholder="Enter product description") }}
+                            {% for error in form.description.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.price.label(class="form-label fw-bold") }}
+                                    {{ form.price(class="form-control", placeholder="0.00", step="0.01") }}
+                                    {% for error in form.price.errors %}
+                                        <span class="text-danger small">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.discount_price.label(class="form-label fw-bold") }}
+                                    {{ form.discount_price(class="form-control", placeholder="0.00", step="0.01") }}
+                                    {% for error in form.discount_price.errors %}
+                                        <span class="text-danger small">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.stock.label(class="form-label fw-bold") }}
+                                    {{ form.stock(class="form-control", placeholder="Quantity") }}
+                                    {% for error in form.stock.errors %}
+                                        <span class="text-danger small">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.is_featured(class="form-check-input") }}
+                                    {{ form.is_featured.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.image.label(class="form-label fw-bold") }}
+                            {{ form.image(class="form-control") }}
+                            {% if form.image.data and form.image.data.filename %}
+                            <div class="mt-2">
+                                <img src="{{ url_for('static', filename='uploads/' + form.image.data.filename) }}" 
+                                     style="max-width: 150px;" class="img-thumbnail">
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Supported formats: JPG, PNG, GIF, WebP. Max size: 16MB</div>
+                            {% for error in form.image.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.manage_products') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </a>
+                            {{ form.submit(class="btn btn-dark px-4") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview image before upload
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.querySelector('.img-thumbnail');
+            if (preview) {
+                preview.src = e.target.result;
+            } else {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '150px';
+                img.className = 'img-thumbnail mt-2';
+                document.querySelector('.mb-4').appendChild(img);
+            }
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Auto-calculate discount percentage
+const priceInput = document.getElementById('price');
+const discountInput = document.getElementById('discount_price');
+
+function updateDiscountInfo() {
+    const price = parseFloat(priceInput.value);
+    const discount = parseFloat(discountInput.value);
+    
+    if (price && discount && discount < price) {
+        const saved = price - discount;
+        const percent = (saved / price * 100).toFixed(0);
+        const infoDiv = document.querySelector('.discount-info');
+        
+        if (!infoDiv) {
+            const div = document.createElement('div');
+            div.className = 'discount-info small text-success mt-1';
+            discountInput.parentNode.appendChild(div);
+        }
+        document.querySelector('.discount-info').innerHTML = `Customers save ${percent}% (₹${saved.toFixed(2)})`;
+    }
+}
+
+if (priceInput && discountInput) {
+    priceInput.addEventListener('input', updateDiscountInfo);
+    discountInput.addEventListener('input', updateDiscountInfo);
+}
+</script>
+{% endblock %}

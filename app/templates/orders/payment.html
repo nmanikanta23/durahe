@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Payment - Durahe{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-white text-center py-4">
+                    <i class="fas fa-credit-card fa-3x text-secondary mb-2"></i>
+                    <h4 class="mb-0">Secure Payment</h4>
+                    <p class="text-muted">Order #{{ order.order_number }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h6>Order Summary</h6>
+                        <div class="d-flex justify-content-between">
+                            <span>Total Amount:</span>
+                            <strong class="h5">₹{{ "%.2f"|format(order.total_amount) }}</strong>
+                        </div>
+                    </div>
+
+                    <form id="paymentForm">
+                        <!-- Card Payment -->
+                        <div class="mb-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="cardPayment" value="card" checked>
+                                <label class="form-check-label" for="cardPayment">
+                                    <i class="fas fa-credit-card me-2"></i> Credit/Debit Card
+                                </label>
+                            </div>
+                            <div id="cardDetails" class="ps-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Expiry Date</label>
+                                        <input type="text" class="form-control" placeholder="MM/YY">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">CVV</label>
+                                        <input type="password" class="form-control" placeholder="123" maxlength="4">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Cardholder Name</label>
+                                    <input type="text" class="form-control" placeholder="Name on card">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UPI Payment -->
+                        <div class="mb-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="upiPayment" value="upi">
+                                <label class="form-check-label" for="upiPayment">
+                                    <i class="fas fa-mobile-alt me-2"></i> UPI
+                                </label>
+                            </div>
+                            <div id="upiDetails" class="ps-4" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">UPI ID</label>
+                                    <input type="text" class="form-control" placeholder="username@okhdfcbank">
+                                </div>
+                                <div class="alert alert-info small">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Pay using any UPI app like Google Pay, PhonePe, or Paytm
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Net Banking -->
+                        <div class="mb-4">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="netBanking" value="netbanking">
+                                <label class="form-check-label" for="netBanking">
+                                    <i class="fas fa-university me-2"></i> Net Banking
+                                </label>
+                            </div>
+                            <div id="bankDetails" class="ps-4" style="display: none;">
+                                <select class="form-select">
+                                    <option>Select your bank</option>
+                                    <option>State Bank of India</option>
+                                    <option>HDFC Bank</option>
+                                    <option>ICICI Bank</option>
+                                    <option>Axis Bank</option>
+                                    <option>Kotak Mahindra Bank</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <small>Your payment information is encrypted and secure.</small>
+                        </div>
+
+                        <button type="button" class="btn btn-dark w-100 py-2" onclick="processPayment()">
+                            <i class="fas fa-lock me-2"></i> Pay ₹{{ "%.2f"|format(order.total_amount) }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide payment details based on selection
+document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.getElementById('cardDetails').style.display = 'none';
+        document.getElementById('upiDetails').style.display = 'none';
+        document.getElementById('bankDetails').style.display = 'none';
+        
+        if (this.value === 'card') {
+            document.getElementById('cardDetails').style.display = 'block';
+        } else if (this.value === 'upi') {
+            document.getElementById('upiDetails').style.display = 'block';
+        } else if (this.value === 'netbanking') {
+            document.getElementById('bankDetails').style.display = 'block';
+        }
+    });
+});
+
+// Format card number
+document.querySelector('input[placeholder*="Card Number"]')?.addEventListener('input', function(e) {
+    let value = this.value.replace(/\s/g, '');
+    if (value.length > 0) {
+        value = value.match(/.{1,4}/g).join(' ');
+        this.value = value;
+    }
+});
+
+function processPayment() {
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    
+    // Simulate payment processing
+    showNotification('Processing payment...', 'info');
+    
+    setTimeout(() => {
+        // Redirect to order confirmation after successful payment
+        window.location.href = "{{ url_for('orders.order_confirmation', order_id=order.id) }}";
+    }, 2000);
+}
+
+// Validate card number on input
+function validateCardNumber(number) {
+    const regex = /^[0-9\s]{16,19}$/;
+    return regex.test(number);
+}
+</script>
+
+<style>
+.form-check-input:checked {
+    background-color: #000;
+    border-color: #000;
+}
+
+.btn-dark:hover {
+    background-color: #c8a97e;
+    border-color: #c8a97e;
+}
+
+input:focus, select:focus {
+    border-color: #c8a97e;
+    box-shadow: 0 0 0 0.2rem rgba(200, 169, 126, 0.25);
+}
+</style>
+{% endblock %}

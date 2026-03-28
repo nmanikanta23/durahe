@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details #{{ order.order_number }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_orders') }}">Orders</a></li>
+                    <li class="breadcrumb-item active">{{ order.order_number }}</li>
+                </ol>
+            </nav>
+            <h2>Order Details</h2>
+            <p class="text-muted">View and manage order #{{ order.order_number }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Items -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ url_for('static', filename=item.product.image_url or 'uploads/placeholder.jpg') }}" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;"
+                                                 class="rounded me-3">
+                                            <div>
+                                                <strong>{{ item.product_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">SKU: PRD{{ item.product_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>₹{{ "%.2f"|format(item.product_price) }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>₹{{ "%.2f"|format(item.total_price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal</strong></td>
+                                    <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Shipping</strong></td>
+                                    <td class="text-success">Free</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total</strong></td>
+                                    <td><strong class="h5">₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Order Placed</h6>
+                                <p>{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            </div>
+                        </div>
+                        {% if order.status != 'pending' %}
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-info">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Processing</h6>
+                                <p>Order confirmed and being processed</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if order.status == 'shipped' or order.status == 'delivered' %}
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-primary">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Shipped</h6>
+                                <p>Order has been shipped</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if order.status == 'delivered' %}
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-success">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Delivered</h6>
+                                <p>Order delivered successfully</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Customer Information -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong><i class="fas fa-user me-2"></i> Name:</strong><br>
+                        {{ order.user.full_name }}
+                    </p>
+                    <p class="mb-2">
+                        <strong><i class="fas fa-envelope me-2"></i> Email:</strong><br>
+                        {{ order.user.email }}
+                    </p>
+                    <p class="mb-2">
+                        <strong><i class="fas fa-phone me-2"></i> Phone:</strong><br>
+                        {{ order.phone or order.user.phone }}
+                    </p>
+                    <a href="{{ url_for('admin.view_user', user_id=order.user.id) }}" class="btn btn-sm btn-outline-dark mt-2">
+                        View Customer Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Shipping Address</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        {{ order.shipping_address }}<br>
+                        {{ order.shipping_city }}, {{ order.shipping_state }}<br>
+                        {{ order.shipping_pincode }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Payment Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Method:</strong> {{ order.payment_method|upper }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Status:</strong>
+                        <span class="badge bg-{{ 'success' if order.payment_status == 'completed' else 'warning' }}">
+                            {{ order.payment_status|upper }}
+                        </span>
+                    </p>
+                    {% if order.payment_status != 'completed' %}
+                    <button class="btn btn-sm btn-success mt-2" onclick="markPaymentCompleted({{ order.id }})">
+                        <i class="fas fa-check me-1"></i> Mark as Paid
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Status Update -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Update Order Status</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('admin.update_order_status', order_id=order.id) }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Order Status</label>
+                            <select name="status" class="form-select">
+                                <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100">
+                            <i class="fas fa-save me-2"></i> Update Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markPaymentCompleted(orderId) {
+    if (confirm('Mark this order as paid?')) {
+        fetch(`/admin/orders/${orderId}/payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ payment_status: 'completed' })
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: -40px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.timeline-content {
+    padding-bottom: 15px;
+    border-left: 2px solid #e0e0e0;
+    padding-left: 20px;
+}
+
+.timeline-item:last-child .timeline-content {
+    border-left: none;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.timeline-content p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
